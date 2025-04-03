@@ -1,9 +1,9 @@
 from fastapi import FastAPI, WebSocket
+import json
 from nlp_utils import extract_intent_and_entities, explain_cooking_term
 from recipe_utils import get_recipe_details, get_substitutions, check_allergens
 
 app = FastAPI()
-
 user_sessions = {}
 
 def format_recipe(recipe):
@@ -13,8 +13,8 @@ def format_recipe(recipe):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    user_id = str(websocket.client)
-    
+    user_id = str(websocket.headers.get("sec-websocket-key", websocket.client))
+
     if user_id not in user_sessions:
         user_sessions[user_id] = {"history": [], "last_recipe": None, "allergens": None, "diet": None}
 
@@ -47,23 +47,33 @@ async def websocket_endpoint(websocket: WebSocket):
                 bot_reply = explain_cooking_term(term) if term else "What cooking term do you want to know about?"
             
             elif intent == "allergen_check":
-                allergens_found = check_allergens(entities)
+                user_allergens = user_sessions[user_id]["allergens"].split(", ") if user_sessions[user_id]["allergens"] else []
+                allergens_found = check_allergens(entities, user_allergens)
                 bot_reply = allergens_found if entities else "Which ingredient do you want me to check?"
 
-
             else:  # Default to fetching a recipe
-                ingredients = [ing.strip() for ing in data.split(",") if ing.strip()]
+                try:
+                    parsed_data = json.loads(data)
+                    ingredients = ", ".join(parsed_data) if isinstance(parsed_data, list) else data.strip()
+                except json.JSONDecodeError:
+                    ingredients = data.strip()
+
                 if not ingredients:
                     bot_reply = "Please provide at least one ingredient."
                 else:
-                    recipe = get_recipe_details(ingredients)
+                    if user_sessions[user_id]["diet"] == "veg":
+                        recipe = get_recipe_details(user_query=ingredients, diet="veg")
+                    else:
+                        recipe = get_recipe_details(ingredients)
+
                     user_sessions[user_id]["last_recipe"] = recipe
 
                     if "error" in recipe:
                         bot_reply = recipe["error"]
                     else:
                         # Filter out allergens
-                        filtered_ingredients = [ing for ing in recipe["ingredients"] if not any(allergen in ing.lower() for allergen in user_sessions[user_id]["allergens"].split(","))]
+                        user_allergens = user_sessions[user_id]["allergens"].split(", ") if user_sessions[user_id]["allergens"] else []
+                        filtered_ingredients = [ing for ing in recipe["ingredients"] if not any(allergen in ing.lower() for allergen in user_allergens)]
                         recipe["ingredients"] = filtered_ingredients
                         bot_reply = format_recipe(recipe)
 
