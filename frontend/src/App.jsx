@@ -35,9 +35,9 @@ function App() {
     };
 
     return (
-        <div style={styles.container}>
-            <h1>🍽️ RecipeBot</h1>
-            <div style={styles.chatBox}>
+        <div style={styles.fullScreenContainer}>
+            <h1 className="heading" style={styles.heading}>Chefie is happy to see you!</h1>
+            <div className="chat-box" style={styles.chatBox}>
                 {messages.map((msg, index) => (
                     <div key={index} style={msg.sender === "user" ? styles.userMessage : styles.botMessage}>
                         <strong>{msg.sender}:</strong> {msg.text}
@@ -59,13 +59,62 @@ function App() {
 
 // 💡 Inline CSS for simple styling
 const styles = {
-    container: { textAlign: "center", fontFamily: "Arial, sans-serif", padding: 20 },
-    chatBox: { maxHeight: "300px", overflowY: "auto", border: "1px solid #ddd", padding: 10, marginBottom: 10 },
-    userMessage: { textAlign: "right", color: "blue", marginBottom: 5 },
-    botMessage: { textAlign: "left", color: "green", marginBottom: 5 },
-    inputContainer: { display: "flex", justifyContent: "center", gap: 10 },
-    input: { padding: 10, width: "60%", borderRadius: 5, border: "1px solid #ddd" },
-    button: { padding: "10px 15px", background: "blue", color: "white", border: "none", cursor: "pointer" }
+        fullScreenContainer: {
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Arial, sans-serif",
+        backgroundColor: "#f9f9f9",
+        padding: 20,
+        boxSizing: "border-box"
+    },
+    heading: {
+        color: "black",
+        fontSize: "2.5rem",
+        marginBottom: "20px"
+    },
+    chatBox: {
+        width: "80%",
+        height: "50%",
+        overflowY: "auto",
+        border: "1px solid #ddd",
+        padding: 10,
+        marginBottom: 20,
+        backgroundColor: "#fff",
+        borderRadius: "8px"
+    },
+    userMessage: {
+        textAlign: "right",
+        color: "blue",
+        marginBottom: 5
+    },
+    botMessage: {
+        textAlign: "left",
+        color: "green",
+        marginBottom: 5
+    },
+    inputContainer: {
+        display: "flex",
+        width: "80%",
+        gap: 10
+    },
+    input: {
+        flex: 1,
+        padding: 10,
+        borderRadius: 5,
+        border: "1px solid #ddd"
+    },
+    button: {
+        padding: "10px 20px",
+        backgroundColor: "blue",
+        color: "white",
+        border: "none",
+        borderRadius: 5,
+        cursor: "pointer"
+    }
 };
 
 export default App;
